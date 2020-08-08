@@ -16,7 +16,7 @@ import { User } from "./user.model";
 const POOL_DATA = {
   UserPoolId: "ap-northeast-1_qBsCMflb9",
   // check AWS UserPools - Gneral Settings
-  ClientId: "4gmo5fplrb94cm9ls6b4eojv6g"
+  ClientId: "4gmo5fplrb94cm9ls6b4eojv6g",
   // check AWS UserPools - Gneral Settings - App clients - App client id
 };
 
@@ -65,7 +65,19 @@ export class AuthService {
     this.authIsLoading.next(true);
     const userData = {
       Username: username,
+      Pool: userPool,
     };
+    const cognitoUser = new CognitoUser(userData);
+    cognitoUser.confirmRegistration(code, true, (err, result) => {
+      if (err) {
+        this.authDidFail.next(true);
+        this.authIsLoading.next(false);
+        return;
+      }
+      this.authDidFail.next(false);
+      this.authIsLoading.next(false);
+      this.router.navigate(['/']);
+    });
   }
   signIn(username: string, password: string): void {
     this.authIsLoading.next(true);
