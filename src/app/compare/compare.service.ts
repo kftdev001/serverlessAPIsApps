@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
-import { Http, Headers, Response } from '@angular/http';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Subject } from 'rxjs/Subject';
-import 'rxjs/add/operator/map';
+import { Injectable } from "@angular/core";
+import { Http, Headers, Response } from "@angular/http";
+import { BehaviorSubject } from "rxjs/BehaviorSubject";
+import { Subject } from "rxjs/Subject";
+import "rxjs/add/operator/map";
 
-import { CompareData } from './compare-data.model';
-import { AuthService } from '../user/auth.service';
+import { CompareData } from "./compare-data.model";
+import { AuthService } from "../user/auth.service";
 
 @Injectable()
 export class CompareService {
@@ -14,25 +14,33 @@ export class CompareService {
   dataLoaded = new Subject<CompareData[]>();
   dataLoadFailed = new Subject<boolean>();
   userData: CompareData;
-  constructor(private http: Http,
-              private authService: AuthService) {
-  }
+  constructor(private http: Http, private authService: AuthService) {}
 
   onStoreData(data: CompareData) {
     this.dataLoadFailed.next(false);
     this.dataIsLoading.next(true);
     this.dataEdited.next(false);
     this.userData = data;
-    this.authService.getAuthenticatedUser().getSession((err,session) => {
-      if(err){
-        console.log(err)
+    this.authService.getAuthenticatedUser().getSession((err, session) => {
+      if (err) {
+        console.log(err);
         return;
       }
-      console.log('session.getIdToken() : ' +session.getIdToken());
-      console.log('session.getIdToken.getJwtToken() : ' +session.getIdToken().getJwtToken());
-      this.http.post('https://w6jia65nn8.execute-api.ap-northeast-1.amazonaws.com/dev/compare-yourself', data, {
-        headers: new Headers({'Authorization': session.getIdToken().getJwtToken()})
-      })
+      console.log("session.getIdToken() : " + session.getIdToken());
+      console.log(
+        "session.getIdToken.getJwtToken() : " +
+          session.getIdToken().getJwtToken()
+      );
+      this.http
+        .post(
+          "https://w6jia65nn8.execute-api.ap-northeast-1.amazonaws.com/dev/compare-yourself",
+          data,
+          {
+            headers: new Headers({
+              Authorization: session.getIdToken().getJwtToken(),
+            }),
+          }
+        )
         .subscribe(
           (result) => {
             this.dataLoadFailed.next(false);
@@ -46,23 +54,29 @@ export class CompareService {
           }
         );
     });
-
   }
   onRetrieveData(all = true) {
     this.dataLoaded.next(null);
     this.dataLoadFailed.next(false);
-    this.authService.getAuthenticatedUser().getSession((err,session) =>{
-      const queryParam = '?accessToken=' + session.getAccessToken().getJwtToken();
-      let urlParam = 'all';
+    this.authService.getAuthenticatedUser().getSession((err, session) => {
+      const queryParam =
+        "?accessToken=" + session.getAccessToken().getJwtToken();
+      let urlParam = "all";
       if (!all) {
-        urlParam = 'single';
+        urlParam = "single";
       }
-      this.http.get('https://w6jia65nn8.execute-api.ap-northeast-1.amazonaws.com/dev/compare-yourself/' + urlParam + queryParam, {
-        headers: new Headers({'Authorization': session.getIdToken().getJwtToken()})
-      })
-        .map(
-          (response: Response) => response.json()
+      this.http
+        .get(
+          "https://w6jia65nn8.execute-api.ap-northeast-1.amazonaws.com/dev/compare-yourself/" +
+            urlParam +
+            queryParam,
+          {
+            headers: new Headers({
+              Authorization: session.getIdToken().getJwtToken(),
+            }),
+          }
         )
+        .map((response: Response) => response.json())
         .subscribe(
           (data) => {
             if (all) {
@@ -82,19 +96,29 @@ export class CompareService {
             this.dataLoaded.next(null);
           }
         );
-    })
-
+    });
   }
   onDeleteData() {
     this.dataLoadFailed.next(false);
-      this.http.delete('https://API_ID.execute-api.REGION.amazonaws.com/dev/', {
-        headers: new Headers({'Authorization': 'XXX'})
-      })
+    this.authService.getAuthenticatedUser().getSession((err, session) => {
+      const deleteParam =
+        "?accessToken=" + session.getAccessToken().getJwtToken();
+      this.http
+        .delete(
+          "https://w6jia65nn8.execute-api.ap-northeast-1.amazonaws.com/dev/compare-yourself/" +
+            deleteParam,
+          {
+            headers: new Headers({
+              Authorization: session.getIdToken().getJwtToken()
+            }),
+          }
+        )
         .subscribe(
           (data) => {
             console.log(data);
           },
           (error) => this.dataLoadFailed.next(true)
         );
+    });
   }
 }
